@@ -1,10 +1,46 @@
-import { useState } from 'react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { formatDistanceToNow, format } from 'date-fns';
 import { MessageCircle, Send } from 'lucide-react';
-import { getCommentsForPost, addComment, type Comment } from '../data/comments';
 
-interface CommentSectionProps {
-  postId: string;
+const SUPABASE_URL = 'https://inqqervcgbykhkvqkaru.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_HKRIypaGLCw3hC3kBBNmTVg_ggqeqxvx';
+
+interface Comment {
+  id: string;
+  post_id: string;
+  username: string;
+  content: string;
+  created_at: string;
+}
+
+async function fetchComments(postId: string): Promise<Comment[]> {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/comments?post_id=eq.${encodeURIComponent(postId)}&order=created_at.desc`,
+    {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    }
+  );
+  if (!res.ok) return [];
+  return res.json();
+}
+
+async function postComment(postId: string, username: string, content: string): Promise<Comment | null> {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/comments`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify({ post_id: postId, username: username || 'anonymous', content }),
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data[0] ?? null;
 }
 
 const avatarColors = [
@@ -24,12 +60,8 @@ function getAvatarColor(name: string) {
   return avatarColors[Math.abs(hash) % avatarColors.length];
 }
 
-function getInitial(name: string) {
-  return name.charAt(0).toUpperCase();
-}
-
 function CommentBubble({ comment, index }: { comment: Comment; index: number }) {
-  const date = new Date(comment.timestamp);
+  const date = new Date(comment.created_at);
   const isRecent = Date.now() - date.getTime() < 7 * 24 * 60 * 60 * 1000;
   const color = getAvatarColor(comment.username);
 
@@ -40,14 +72,17 @@ function CommentBubble({ comment, index }: { comment: Comment; index: number }) 
     >
       <div className="flex items-start gap-3.5">
         <div className={`w-9 h-9 rounded-full ${color} flex items-center justify-center flex-shrink-0 font-serif text-sm font-semibold italic`}>
-          {getInitial(comment.username)}
+          {comment.username.charAt(0).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 flex-wrap">
             <span className="font-mono text-xs tracking-wider text-ink dark:text-dark-text">
               {comment.username}
             </span>
-            <span className="text-[10px] font-mono text-ink-muted/40 dark:text-dark-text-muted/50 tracking-wider" title={format(date, 'PPpp')}>
+            <span
+              className="text-[10px] font-mono text-ink-muted/40 dark:text-dark-text-muted/50 tracking-wider"
+              title={format(date, 'PPpp')}
+            >
               {isRecent ? formatDistanceToNow(date, { addSuffix: true }) : format(date, 'MMM d, yyyy')}
             </span>
           </div>
@@ -60,31 +95,47 @@ function CommentBubble({ comment, index }: { comment: Comment; index: number }) 
   );
 }
 
+interface CommentSectionProps {
+  postId: string;
+}
+
 export default function CommentSection({ postId }: CommentSectionProps) {
-  const [comments, setComments] = useState(() => getCommentsForPost(postId));
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState(() => localStorage.getItem('blog_username') || '');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    setLoading(true);
+    fetchComments(postId).then(data => {
+      setComments(data);
+      setLoading(false);
+    });
+  }, [postId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
-
     setIsSubmitting(true);
+    setError(null);
 
     if (username.trim()) {
       localStorage.setItem('blog_username', username.trim());
     }
 
-    setTimeout(() => {
-      const newComment = addComment(postId, username || 'anonymous', content);
+    const newComment = await postComment(postId, username.trim(), content.trim());
+    if (newComment) {
       setComments(prev => [newComment, ...prev]);
       setContent('');
-      setIsSubmitting(false);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-    }, 300);
+    } else {
+      setError('Something went wrong. Please try again.');
+    }
+    setIsSubmitting(false);
   };
 
   return (
@@ -152,6 +203,11 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                   ✓ Posted
                 </span>
               )}
+              {error && (
+                <span className="text-[11px] font-mono text-rose dark:text-rose-light tracking-wider">
+                  {error}
+                </span>
+              )}
               <button
                 type="submit"
                 disabled={!content.trim() || isSubmitting}
@@ -166,7 +222,13 @@ export default function CommentSection({ postId }: CommentSectionProps) {
       </form>
 
       {/* Comments */}
-      {comments.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-12">
+          <p className="text-ink-muted/30 dark:text-dark-text-muted/40 font-mono text-xs tracking-widest uppercase animate-pulse">
+            Loading...
+          </p>
+        </div>
+      ) : comments.length === 0 ? (
         <div className="text-center py-16">
           <div className="font-serif text-4xl text-ink/5 dark:text-dark-text/10 mb-4 italic">"</div>
           <p className="text-ink-muted/40 dark:text-dark-text-muted/50 font-serif italic text-lg">
