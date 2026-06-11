@@ -8,6 +8,11 @@ interface HeaderProps {
 
 export default function Header({ onNavigateHome, showBack }: HeaderProps) {
   const { isDark, toggle } = useTheme();
+  const socialLinks = [
+    { href: 'https://github.com/Voidfull', label: 'Github' },
+    { href: 'https://www.linkedin.com/in/aziz-sbai-338026248/', label: 'LinkedIn' },
+    { href: 'https://x.com/RMidlaner', label: 'Twitter' },
+  ];
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-paper/70 dark:bg-dark-bg/80">
@@ -42,6 +47,21 @@ export default function Header({ onNavigateHome, showBack }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-3 text-[10px] font-mono text-ink-muted/50 dark:text-dark-text-muted/40 tracking-[0.25em] uppercase">
+            {socialLinks.map((link, index) => (
+              <span key={link.href} className="flex items-center gap-2">
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-accent dark:hover:text-dark-accent transition-colors duration-300"
+                >
+                  {link.label}
+                </a>
+                {index < socialLinks.length - 1 && <span className="pointer-events-none">·</span>}
+              </span>
+            ))}
+          </div>
           <span className="hidden sm:block text-[10px] font-mono text-ink-muted/50 dark:text-dark-text-muted/40 tracking-widest uppercase">
             Sbai M. Aziz
           </span>
