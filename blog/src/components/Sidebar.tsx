@@ -105,10 +105,10 @@ export default function Sidebar({ activeCategory, activeTag, onCategoryChange, o
       <div className="pt-4">
         <div className="h-px bg-gradient-to-r from-ink/5 via-ink/10 to-ink/5 dark:from-dark-border/20 dark:via-dark-border/50 dark:to-dark-border/20 mb-6" />
         <p className="font-serif text-base italic text-ink-muted/40 dark:text-dark-text-muted/40 leading-relaxed">
-          "The only way to do great work is to love what you do."
+          "Power is given only to those who dare to lower themselves and pick it up. Only one thing matters, one thing; to be able to dare!"
         </p>
         <p className="mt-1 text-[10px] font-mono text-ink-muted/25 dark:text-dark-text-muted/30 tracking-widest uppercase">
-          — Steve Jobs
+          — Fyodor Dostoevsky
         </p>
       </div>
     </aside>
