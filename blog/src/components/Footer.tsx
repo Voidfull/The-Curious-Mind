@@ -20,11 +20,36 @@ export default function Footer() {
           </p>
 
           <div className="flex items-center gap-6 text-[10px] font-mono tracking-[0.2em] uppercase text-ink-muted/30 dark:text-dark-text-muted/40">
-            <a href="https://www.linkedin.com/in/aziz-sbai-338026248/" className="hover:text-accent dark:hover:text-dark-accent transition-colors duration-300">Linkedin</a>
+            <a
+              href="https://www.linkedin.com/in/aziz-sbai-338026248/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-accent dark:hover:text-dark-accent transition-colors duration-300"
+            >
+              LinkedIn
+            </a>
+
             <span>·</span>
-            <a href="https://github.com/Voidfull" className="hover:text-accent dark:hover:text-dark-accent transition-colors duration-300">GitHub</a>
+
+            <a
+              href="https://github.com/Voidfull"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-accent dark:hover:text-dark-accent transition-colors duration-300"
+            >
+              GitHub
+            </a>
+
             <span>·</span>
-            <a href="https://x.com/RMidlaner" className="hover:text-accent dark:hover:text-dark-accent transition-colors duration-300">Twitter</a>
+
+            <a
+              href="https://x.com/RMidlaner"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-accent dark:hover:text-dark-accent transition-colors duration-300"
+            >
+              Twitter
+            </a>
           </div>
 
           <p className="text-[9px] font-mono text-ink-muted/20 dark:text-dark-text-muted/30 tracking-[0.3em] uppercase mt-2">
