@@ -87,7 +87,7 @@ export default function HomePage({
         <p className="mt-5 text-base sm:text-lg text-ink-light/70 dark:text-dark-text-muted/80 max-w-xl mx-auto leading-relaxed font-light">
           Essays, articles, and interesting things I've stumbled upon.
           <span className="block mt-1 text-ink-muted/50 dark:text-dark-text-muted/50 text-sm italic font-serif">
-            Thinking out loud since 2025.
+            Thinking out loud.
           </span>
         </p>
 
