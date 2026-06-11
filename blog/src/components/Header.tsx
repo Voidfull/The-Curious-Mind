@@ -43,7 +43,7 @@ export default function Header({ onNavigateHome, showBack }: HeaderProps) {
 
         <div className="flex items-center gap-4">
           <span className="hidden sm:block text-[10px] font-mono text-ink-muted/50 dark:text-dark-text-muted/40 tracking-widest uppercase">
-            Est. 2025
+            Sbai M. Aziz
           </span>
           <div className="w-px h-4 bg-paper-dark dark:bg-dark-border hidden sm:block" />
           <button
