@@ -35,12 +35,12 @@ export default function Footer() {
             All thoughts are my own, all mistakes are mine too.
           </p>
           <div className="flex items-center gap-6 text-[10px] font-mono tracking-[0.2em] uppercase text-ink-muted/30 dark:text-dark-text-muted/40">
-            <ExternalLink href="https://www.linkedin.com/in/aziz-sbai-338026248/" className={linkClass}>
-              LinkedIn
+            <ExternalLink href="https://github.com/Voidfull" className={linkClass}>
+              Github
             </ExternalLink>
             <span>·</span>
-            <ExternalLink href="https://github.com/Voidfull" className={linkClass}>
-              GitHub
+            <ExternalLink href="https://www.linkedin.com/in/aziz-sbai-338026248/" className={linkClass}>
+              Linkedin
             </ExternalLink>
             <span>·</span>
             <ExternalLink href="https://x.com/RMidlaner" className={linkClass}>
