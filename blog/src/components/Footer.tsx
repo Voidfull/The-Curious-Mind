@@ -15,7 +15,7 @@ function ExternalLink({ href, children, className }: { href: string; children: R
 }
 
 export default function Footer() {
-  const linkClass = "cursor-pointer pointer-events-auto hover:underline hover:text-accent dark:hover:text-dark-accent transition-colors duration-300";
+  const linkClass = "inline-flex cursor-pointer items-center gap-1 px-1 hover:underline hover:text-accent dark:hover:text-dark-accent transition-colors duration-300 pointer-events-auto";
 
   return (
     <footer className="mt-24 relative z-10">
@@ -34,11 +34,11 @@ export default function Footer() {
             <ExternalLink href="https://github.com/Voidfull" className={linkClass}>
               Github
             </ExternalLink>
-            <span>·</span>
+            <span className="pointer-events-none">·</span>
             <ExternalLink href="https://www.linkedin.com/in/aziz-sbai-338026248/" className={linkClass}>
               Linkedin
             </ExternalLink>
-            <span>·</span>
+            <span className="pointer-events-none">·</span>
             <ExternalLink href="https://x.com/RMidlaner" className={linkClass}>
               Twitter
             </ExternalLink>
