@@ -100,6 +100,32 @@ Loaded from Google Fonts:
 - **Cormorant Garamond** — headings and decorative text
 - **DM Sans** — body copy
 - **Space Mono** — monospace labels, metadata, and UI elements
+ 
+## Deployment (Vercel)
+
+This repository contains the blog app under the `blog/` subfolder. When creating a Vercel project for this site, set the following project settings to ensure builds run correctly:
+
+- **Root Directory:** `blog`
+- **Install Command:** `npm ci`
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+
+Note about Vite on Vercel:
+
+- Some Vercel environments restore `node_modules/.bin` with non-executable shims, which can cause a `Permission denied` error when running the `vite` bin directly (error example: `/vercel/path0/blog/node_modules/.bin/vite: Permission denied`).
+- To avoid this, this project uses a robust build script in `blog/package.json` that runs Vite via Node directly:
+
+```json
+"build": "node ./node_modules/vite/bin/vite.js build"
+```
+
+If you still hit permission issues, set the Vercel **Build Command** to:
+
+```bash
+node ./node_modules/vite/bin/vite.js build
+```
+
+Do not commit generated build artifacts (`dist/`) or `node_modules/` to the repo. Vercel will restore dependencies and produce the production `dist` output during the build step.
 
 ## License
 
