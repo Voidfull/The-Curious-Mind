@@ -103,7 +103,12 @@ export default function PostView({ post, onTagClick }: PostViewProps) {
               />
             ),
             img: ({ node, ...props }) => (
-              <img {...props} className="max-w-full rounded-xl" alt={props.alt || ''} />
+              <img
+                {...props}
+                className="mx-auto block max-w-3xl w-full h-72 sm:h-80 md:h-[28rem] object-cover rounded-3xl"
+                alt={props.alt || ''}
+                loading="lazy"
+              />
             ),
           }}
         >
