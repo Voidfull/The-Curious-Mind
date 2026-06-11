@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { Clock, Calendar } from 'lucide-react';
-import type { BlogPost } from '../data/posts';
+import ReactMarkdown from 'react-markdown';
+import type { BlogPost } from '../data/posts-new';
 import CommentSection from './CommentSection';
 import { ArtisticDivider, WavyLine } from './Decorations';
 import Ouroboros from './Ouroboros';
@@ -90,10 +91,25 @@ export default function PostView({ post, onTagClick }: PostViewProps) {
       <ArtisticDivider className="mb-12" />
 
       {/* Content with drop cap */}
-      <div
-        className="prose-blog text-ink-light dark:text-dark-text-muted [&>p:first-child]:first-letter:text-[3.5rem] [&>p:first-child]:first-letter:font-serif [&>p:first-child]:first-letter:font-semibold [&>p:first-child]:first-letter:float-left [&>p:first-child]:first-letter:mr-3 [&>p:first-child]:first-letter:mt-1 [&>p:first-child]:first-letter:leading-[0.8] [&>p:first-child]:first-letter:text-accent dark:[&>p:first-child]:first-letter:text-dark-accent"
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      />
+      <div className="prose-blog text-ink-light dark:text-dark-text-muted [&>p:first-child]:first-letter:text-[3.5rem] [&>p:first-child]:first-letter:font-serif [&>p:first-child]:first-letter:font-semibold [&>p:first-child]:first-letter:float-left [&>p:first-child]:first-letter:mr-3 [&>p:first-child]:first-letter:mt-1 [&>p:first-child]:first-letter:leading-[0.8] [&>p:first-child]:first-letter:text-accent dark:[&>p:first-child]:first-letter:text-dark-accent">
+        <ReactMarkdown
+          components={{
+            a: ({ node, ...props }) => (
+              <a
+                {...props}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent dark:text-dark-accent hover:underline"
+              />
+            ),
+            img: ({ node, ...props }) => (
+              <img {...props} className="max-w-full rounded-xl" alt={props.alt || ''} />
+            ),
+          }}
+        >
+          {post.content}
+        </ReactMarkdown>
+      </div>
 
       {/* End mark */}
       <div className="mt-16 mb-4 flex items-center justify-center">

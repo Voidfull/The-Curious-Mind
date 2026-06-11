@@ -67,11 +67,6 @@
 ::-webkit-scrollbar-thumb:hover { background: var(--color-ink-muted); }
 .dark ::-webkit-scrollbar-thumb { background: var(--color-dark-surface-2); }
 
-/* Smooth transitions */
-*, *::before, *::after {
-  transition: background-color 0.4s ease, color 0.3s ease, border-color 0.4s ease, box-shadow 0.3s ease;
-}
-
 /* ===== Article prose ===== */
 .prose-blog h2 {
   font-family: 'Cormorant Garamond', serif;

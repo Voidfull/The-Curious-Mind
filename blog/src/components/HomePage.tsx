@@ -1,7 +1,7 @@
 import { Search, X } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { getPostsByCategory, getPostsByTag } from '../data/posts';
-import type { BlogPost } from '../data/posts';
+import { getPostsByCategory, getPostsByTag } from '../data/posts-new';
+import type { BlogPost } from '../data/posts-new';
 import PostCard from './PostCard';
 import Sidebar from './Sidebar';
 import { WavyLine } from './Decorations';

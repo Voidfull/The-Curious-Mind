@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { Clock, MessageCircle, ArrowUpRight } from 'lucide-react';
-import type { BlogPost } from '../data/posts';
+import type { BlogPost } from '../data/posts-new';
 import { getCommentCount } from '../data/comments';
 import { IssueNumber, CornerDecoration } from './Decorations';
 
@@ -39,7 +39,16 @@ export default function PostCard({ post, onClick, index }: PostCardProps) {
 
   return (
     <article
+      role="button"
+      tabIndex={0}
+      aria-label={`Open post ${post.title}`}
       onClick={onClick}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
       className="group cursor-pointer animate-fade-in-up"
       style={{ animationDelay: `${index * 100}ms`, opacity: 0 }}
     >

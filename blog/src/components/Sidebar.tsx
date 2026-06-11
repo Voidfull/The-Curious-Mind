@@ -1,4 +1,4 @@
-import { categories, getAllTags } from '../data/posts';
+import { categories, allTags } from '../data/posts-new';
 
 interface SidebarProps {
   activeCategory: string;
@@ -16,8 +16,6 @@ const catDecorations: Record<string, string> = {
 };
 
 export default function Sidebar({ activeCategory, activeTag, onCategoryChange, onTagClick }: SidebarProps) {
-  const allTags = getAllTags();
-
   return (
     <aside className="space-y-10">
       {/* About */}

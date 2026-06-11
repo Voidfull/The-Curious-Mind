@@ -1,6 +1,12 @@
 import { Sun, Moon, ArrowLeft, Feather } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
+const socialLinks = [
+  { href: 'https://github.com/Voidfull', label: 'Github' },
+  { href: 'https://www.linkedin.com/in/aziz-sbai-338026248/', label: 'LinkedIn' },
+  { href: 'https://x.com/RMidlaner', label: 'Twitter' },
+];
+
 interface HeaderProps {
   onNavigateHome: () => void;
   showBack?: boolean;
@@ -8,11 +14,6 @@ interface HeaderProps {
 
 export default function Header({ onNavigateHome, showBack }: HeaderProps) {
   const { isDark, toggle } = useTheme();
-  const socialLinks = [
-    { href: 'https://github.com/Voidfull', label: 'Github' },
-    { href: 'https://www.linkedin.com/in/aziz-sbai-338026248/', label: 'LinkedIn' },
-    { href: 'https://x.com/RMidlaner', label: 'Twitter' },
-  ];
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-paper/70 dark:bg-dark-bg/80">

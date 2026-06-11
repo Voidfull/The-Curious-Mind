@@ -4,8 +4,8 @@ import Header from './components/Header';
 import HomePage from './components/HomePage';
 import PostView from './components/PostView';
 import Footer from './components/Footer';
-import AnimatedBackground from './components/AnimatedBackground';
-import { getPost } from './data/posts';
+import AnimatedBackground from './components/AnimatedBackground-new';
+import { getPost } from './data/posts-new';
 
 type View = { type: 'home' } | { type: 'post'; postId: string };
 
