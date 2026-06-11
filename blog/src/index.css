@@ -11,7 +11,7 @@
   /* Light palette */
   --color-ink: #1c1917;
   --color-ink-light: #44403c;
-  --color-ink-muted: #a8a29e;
+  --color-ink-muted: #716d67;
   --color-paper: #faf8f5;
   --color-paper-warm: #f3ede5;
   --color-paper-dark: #e7dfd4;
@@ -66,11 +66,6 @@
 ::-webkit-scrollbar-thumb { background: var(--color-paper-dark); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-ink-muted); }
 .dark ::-webkit-scrollbar-thumb { background: var(--color-dark-surface-2); }
-
-/* Smooth transitions */
-*, *::before, *::after {
-  transition: background-color 0.4s ease, color 0.3s ease, border-color 0.4s ease, box-shadow 0.3s ease;
-}
 
 /* ===== Article prose ===== */
 .prose-blog h2 {
