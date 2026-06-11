@@ -24,8 +24,6 @@ export const posts: BlogPost[] = [
     excerpt: 'The universe has a preference. It does not prefer you. And yet — here you are.',
     content: `The universe has a preference. It does not prefer you. It does not prefer your careful arrangements, your clean desk, your tuned instrument, your ordered thoughts. Given enough time, given really any time at all, it will take everything you have built and scatter it. Not out of malice. That is the part that should unsettle you most. It is not malice. It is just math.
 
-![Statistical Silence](/images/ima.jfif)
-
 ## The Headcount
 
 There are more ways for a room to be messy than clean. More ways for a song to be noise than music. More ways for atoms to be dispersed than gathered. The second law of thermodynamics, that entropy always increases, is not really a law at all. It is a headcount. Disorder wins because disorder shows up in greater numbers. It is a democracy, and chaos has all the votes.
