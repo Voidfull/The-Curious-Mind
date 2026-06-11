@@ -15,13 +15,13 @@ function ExternalLink({ href, children, className }: { href: string; children: R
 }
 
 export default function Footer() {
-  const linkClass = "cursor-pointer hover:text-accent dark:hover:text-dark-accent transition-colors duration-300";
+  const linkClass = "cursor-pointer pointer-events-auto hover:underline hover:text-accent dark:hover:text-dark-accent transition-colors duration-300";
 
   return (
-    <footer className="mt-24 relative">
+    <footer className="mt-24 relative z-10">
       <WavyLine className="opacity-20 dark:opacity-15" />
       <div className="max-w-5xl mx-auto px-6 py-12">
-        <div className="flex flex-col items-center text-center gap-6">
+        <div className="relative z-10 flex flex-col items-center text-center gap-6">
           <div style={{ width: 60, height: 60, opacity: 0.2 }}>
             <Ouroboros />
           </div>
