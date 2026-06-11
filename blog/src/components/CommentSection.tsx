@@ -2,9 +2,6 @@ import { useState, useEffect } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { MessageCircle, Send } from 'lucide-react';
 
-const SUPABASE_URL = 'https://inqqervcgbykhkvqkaru.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_HKRIypaGLCw3hC3kBBNmTVg_ggqeqxvx';
-
 interface Comment {
   id: string;
   post_id: string;
@@ -14,33 +11,31 @@ interface Comment {
 }
 
 async function fetchComments(postId: string): Promise<Comment[]> {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/comments?post_id=eq.${encodeURIComponent(postId)}&order=created_at.desc`,
-    {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-    }
-  );
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const res = await fetch(`/api/comments?postId=${encodeURIComponent(postId)}`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
 }
 
-async function postComment(postId: string, username: string, content: string): Promise<Comment | null> {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/comments`, {
-    method: 'POST',
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-    },
-    body: JSON.stringify({ post_id: postId, username: username || 'anonymous', content }),
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data[0] ?? null;
+async function postComment(
+  postId: string,
+  username: string,
+  content: string
+): Promise<Comment | null> {
+  try {
+    const res = await fetch('/api/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ post_id: postId, username, content }),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
 }
 
 const avatarColors = [
@@ -67,7 +62,7 @@ function CommentBubble({ comment, index }: { comment: Comment; index: number }) 
 
   return (
     <div
-      className="group animate-fade-in-up"
+      className="animate-fade-in-up"
       style={{ animationDelay: `${index * 60}ms`, opacity: 0 }}
     >
       <div className="flex items-start gap-3.5">
@@ -83,7 +78,9 @@ function CommentBubble({ comment, index }: { comment: Comment; index: number }) 
               className="text-[10px] font-mono text-ink-muted/40 dark:text-dark-text-muted/50 tracking-wider"
               title={format(date, 'PPpp')}
             >
-              {isRecent ? formatDistanceToNow(date, { addSuffix: true }) : format(date, 'MMM d, yyyy')}
+              {isRecent
+                ? formatDistanceToNow(date, { addSuffix: true })
+                : format(date, 'MMM d, yyyy')}
             </span>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-ink-light/80 dark:text-dark-text-muted/80 whitespace-pre-wrap">
@@ -102,7 +99,9 @@ interface CommentSectionProps {
 export default function CommentSection({ postId }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [username, setUsername] = useState(() => localStorage.getItem('blog_username') || '');
+  const [username, setUsername] = useState(
+    () => localStorage.getItem('blog_username') || ''
+  );
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -126,7 +125,12 @@ export default function CommentSection({ postId }: CommentSectionProps) {
       localStorage.setItem('blog_username', username.trim());
     }
 
-    const newComment = await postComment(postId, username.trim(), content.trim());
+    const newComment = await postComment(
+      postId,
+      username.trim() || 'anonymous',
+      content.trim()
+    );
+
     if (newComment) {
       setComments(prev => [newComment, ...prev]);
       setContent('');
@@ -140,7 +144,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   return (
     <section className="mt-16 pt-12">
-      {/* Header */}
       <div className="flex items-center gap-3 mb-10">
         <MessageCircle size={18} className="text-accent/60 dark:text-dark-accent/70" />
         <h2 className="font-serif text-2xl font-semibold text-ink dark:text-dark-text italic">
@@ -154,7 +157,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         <div className="flex-1 h-px bg-gradient-to-r from-ink/5 dark:from-dark-border/30 to-transparent" />
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="mb-12">
         <div className="relative p-6 art-border rounded-sm">
           <div className="absolute -top-2.5 left-4 bg-paper dark:bg-dark-bg px-2 text-[10px] font-mono text-ink-muted/40 dark:text-dark-text-muted/50 tracking-[0.15em] uppercase">
@@ -162,9 +164,14 @@ export default function CommentSection({ postId }: CommentSectionProps) {
           </div>
 
           <div className="mb-5">
-            <label htmlFor="username" className="block text-[10px] font-mono text-ink-muted/50 dark:text-dark-text-muted/60 mb-2 tracking-[0.15em] uppercase">
+            <label
+              htmlFor="username"
+              className="block text-[10px] font-mono text-ink-muted/50 dark:text-dark-text-muted/60 mb-2 tracking-[0.15em] uppercase"
+            >
               Your name
-              <span className="text-ink-muted/30 dark:text-dark-text-muted/40 normal-case tracking-normal ml-1">(or stay anonymous)</span>
+              <span className="text-ink-muted/30 dark:text-dark-text-muted/40 normal-case tracking-normal ml-1">
+                (or stay anonymous)
+              </span>
             </label>
             <input
               id="username"
@@ -178,7 +185,10 @@ export default function CommentSection({ postId }: CommentSectionProps) {
           </div>
 
           <div className="mb-5">
-            <label htmlFor="comment" className="block text-[10px] font-mono text-ink-muted/50 dark:text-dark-text-muted/60 mb-2 tracking-[0.15em] uppercase">
+            <label
+              htmlFor="comment"
+              className="block text-[10px] font-mono text-ink-muted/50 dark:text-dark-text-muted/60 mb-2 tracking-[0.15em] uppercase"
+            >
               Your thoughts
             </label>
             <textarea
@@ -221,7 +231,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         </div>
       </form>
 
-      {/* Comments */}
       {loading ? (
         <div className="text-center py-12">
           <p className="text-ink-muted/30 dark:text-dark-text-muted/40 font-mono text-xs tracking-widest uppercase animate-pulse">
