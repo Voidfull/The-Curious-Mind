@@ -26,7 +26,7 @@ export default function Sidebar({ activeCategory, activeTag, onCategoryChange, o
           About
         </div>
         <p className="text-sm leading-relaxed text-ink-light/70 dark:text-dark-text-muted/80 font-light">
-          A collection of essays, articles, and interesting things I've found.{' '}
+          A collection of essays, articles, and interesting things I've shared.{' '}
           <span className="font-serif italic">Writing helps me think.</span>{' '}
           Maybe some of it will help you think too.
         </p>
