@@ -68,11 +68,11 @@ function ParticleCanvas({ compactMode, reducedMotion }: { compactMode: boolean; 
         [184, 152, 64],
       ],
       light: [
-        [192, 83, 43],
-        [144, 112, 192],
-        [74, 136, 168],
-        [107, 153, 112],
-        [184, 152, 64],
+        [140, 58, 32],
+        [100, 80, 150],
+        [52, 100, 140],
+        [60, 110, 70],
+        [150, 120, 40],
       ],
     };
 
@@ -89,7 +89,7 @@ function ParticleCanvas({ compactMode, reducedMotion }: { compactMode: boolean; 
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
       const dark = darkRef.current;
-      const baseAlpha = dark ? 1.05 : 0.75;
+      const baseAlpha = dark ? 1.05 : 1.2;
 
       for (const p of particles) {
         p.wanderAngle += (Math.random() - 0.5) * 0.08;
