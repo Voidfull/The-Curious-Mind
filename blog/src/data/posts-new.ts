@@ -24,6 +24,8 @@ export const posts: BlogPost[] = [
     excerpt: 'The universe has a preference. It does not prefer you. And yet — here you are.',
     content: `The universe has a preference. It does not prefer you. It does not prefer your careful arrangements, your clean desk, your tuned instrument, your ordered thoughts. Given enough time, given really any time at all, it will take everything you have built and scatter it. Not out of malice. That is the part that should unsettle you most. It is not malice. It is just math.
 
+## The Headcount
+
 There are more ways for a room to be messy than clean. More ways for a song to be noise than music. More ways for atoms to be dispersed than gathered. The second law of thermodynamics, that entropy always increases, is not really a law at all. It is a headcount. Disorder wins because disorder shows up in greater numbers. It is a democracy, and chaos has all the votes.
 
 And yet. Here you are.
@@ -34,7 +36,9 @@ I think about the infinite monkeys. Given enough of them, enough typewriters, en
 
 But Shakespeare was not a monkey. Shakespeare sat down and chose the words. He imposed order on chaos deliberately, violently, with full knowledge of how many wrong arrangements existed and a commitment to finding the one that wasn't. That is something different. That is something the second law of thermodynamics has no category for. Entropy accounts for accident. It has no framework for will.
 
-Ramanujan said an equation has no meaning to him unless it expresses a thought of God. I think what he meant, what he could only have meant, is that mathematics is not discovered passively. It is wrested. You go into the dark, into the vast statistical silence where most arrangements are meaningless, and you come back holding something true. That is not luck. That is the mind refusing to accept the universe's default answer.
+> Ramanujan said an equation has no meaning to him unless it expresses a thought of God. I think what he meant, what he could only have meant, is that mathematics is not discovered passively. It is wrested. You go into the dark, into the vast statistical silence where most arrangements are meaningless, and you come back holding something true. That is not luck. That is the mind refusing to accept the universe's default answer.
+
+## The Right Note
 
 When the guitarist finds the right note, when the specific vibration of a string moves air in a specific way that arrives at a specific ear and produces, impossibly, the feeling of grief or joy or longing, that is not an accident. It is a negotiation with probability, conducted by someone who refused to stop at noise. The universe offered ten thousand wrong notes. They played until they found the one that wasn't.
 
