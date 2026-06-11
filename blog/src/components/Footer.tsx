@@ -8,10 +8,6 @@ function ExternalLink({ href, children, className }: { href: string; children: R
       target="_blank"
       rel="noopener noreferrer"
       className={className}
-      onClick={(e) => {
-        e.preventDefault();
-        window.open(href, '_blank', 'noopener,noreferrer');
-      }}
     >
       {children}
     </a>
@@ -19,7 +15,7 @@ function ExternalLink({ href, children, className }: { href: string; children: R
 }
 
 export default function Footer() {
-  const linkClass = "hover:text-accent dark:hover:text-dark-accent transition-colors duration-300";
+  const linkClass = "cursor-pointer hover:text-accent dark:hover:text-dark-accent transition-colors duration-300";
 
   return (
     <footer className="mt-24 relative">
