@@ -75,7 +75,7 @@ src/
 
 ## Adding Posts
 
-Posts live in `src/data/posts-new.ts`. Add an object to the `posts` array:
+Posts live in `src/data/posts-new.ts`. The markdown content files are stored in `src/data/posts/` and imported with the `?raw` suffix so they render as Markdown in the reader.
 
 ```ts
 import myPostContent from './posts/my-post-slug.md?raw';
@@ -94,11 +94,21 @@ import myPostContent from './posts/my-post-slug.md?raw';
 }
 ```
 
-You can also define content inline:
+You can also define content inline for quick drafts:
 
 ```ts
   content: `# Your markdown content here\n\nThis is a paragraph with **markdown** formatting.`,
 ```
+
+### Adding a new markdown post file
+
+Create a new `.md` file in `src/data/posts/`, then import it from `src/data/posts-new.ts`:
+
+```ts
+import newPostContent from './posts/my-post-slug.md?raw';
+```
+
+Use that imported string for the `content` field.
 
 Content is rendered as Markdown. Headings, blockquotes, lists, code blocks, and inline `code` all have styled variants via the `.prose-blog` class.
 
