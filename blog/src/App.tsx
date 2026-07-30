@@ -1,10 +1,10 @@
-import { useState, useCallback, useEffect } from 'react';
+import { Suspense, lazy, useState, useCallback, useEffect } from 'react';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import Header from './components/Header';
 import HomePage from './components/HomePage';
 import PostView from './components/PostView';
 import Footer from './components/Footer';
-import AnimatedBackground from './components/AnimatedBackground-new';
+const AnimatedBackground = lazy(() => import('./components/AnimatedBackground-new'));
 import { getPost } from './data/posts-new';
 
 type View = { type: 'home' } | { type: 'post'; postId: string };
@@ -102,7 +102,9 @@ function BlogApp() {
       />
 
       {/* Animated background — particles, blobs, orbits, constellations */}
-      <AnimatedBackground />
+      <Suspense fallback={null}>
+        <AnimatedBackground />
+      </Suspense>
 
       <div className="relative z-10">
         <Header

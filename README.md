@@ -13,7 +13,7 @@ A clean, atmospheric personal blog built with React, Vite, and Tailwind CSS. Fea
 - **Animated background** — Canvas-based particle system with flowing trails, connection lines, aurora waves, pulsing halos, and floating glyphs
 - **Ouroboros logo** — Detailed SVG serpent with bonsai tree and root motifs, breathing and rotation animations
 - **Dark / light mode** — Persisted to `localStorage`, respects system preference on first visit
-- **Comment system** — Stored in `localStorage` with username persistence, relative timestamps, and colored avatars
+- **Comment system** — API-backed comment fetching, with username persistence, relative timestamps, and colored avatars
 - **Post filtering** — Filter by category (Essay, Article, Interesting Find, Note) or by tag, with live search
 - **Hash-based routing** — Deep-linkable post URLs via `#post/<id>`
 - **Single-file build** — Outputs a self-contained `index.html` via `vite-plugin-singlefile`
@@ -97,10 +97,10 @@ import myPostContent from './posts/my-post-slug.md?raw';
 You can also define content inline:
 
 ```ts
-  content: `<p>Your HTML content here...</p>`,
+  content: `# Your markdown content here\n\nThis is a paragraph with **markdown** formatting.`,
 ```
 
-Content supports standard HTML tags. Headings (`h2`, `h3`), blockquotes, lists, code blocks, and inline `code` all have styled variants via the `.prose-blog` class.
+Content is rendered as Markdown. Headings, blockquotes, lists, code blocks, and inline `code` all have styled variants via the `.prose-blog` class.
 
 ## Fonts
 

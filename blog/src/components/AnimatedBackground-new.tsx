@@ -18,20 +18,37 @@ interface Particle {
   wanderAngle: number;
 }
 
+const particlePalettes = {
+  dark: [
+    [232, 132, 90],
+    [144, 112, 192],
+    [74, 136, 168],
+    [107, 153, 112],
+    [184, 152, 64],
+  ],
+  light: [
+    [140, 58, 32],
+    [100, 80, 150],
+    [52, 100, 140],
+    [60, 110, 70],
+    [150, 120, 40],
+  ],
+};
+
 function createParticle(w: number, h: number, colorSet: number[], reducedMotion: boolean) {
-  const speedFactor = reducedMotion ? 0.18 : 0.28;
+  const speedFactor = reducedMotion ? 0.18 : 0.26;
   return {
     x: Math.random() * w,
     y: Math.random() * h,
     vx: (Math.random() - 0.5) * speedFactor,
     vy: (Math.random() - 0.5) * speedFactor,
-    radius: Math.random() * 2.2 + 0.9,
+    radius: Math.random() * 2.1 + 0.9,
     color: `${colorSet[0]},${colorSet[1]},${colorSet[2]}`,
-    alpha: Math.random() * 0.35 + 0.08,
+    alpha: Math.random() * 0.32 + 0.08,
     pulse: Math.random() * Math.PI * 2,
-    pulseSpeed: Math.random() * 0.012 + 0.004,
+    pulseSpeed: Math.random() * 0.01 + 0.004,
     trail: [],
-    trailLength: reducedMotion ? 10 : 18,
+    trailLength: reducedMotion ? 6 : 12,
     angle: Math.random() * Math.PI * 2,
     orbitSpeed: (Math.random() - 0.5) * 0.003,
     wanderAngle: Math.random() * Math.PI * 2,
@@ -59,27 +76,10 @@ function ParticleCanvas({ compactMode, reducedMotion }: { compactMode: boolean; 
     resize();
     window.addEventListener('resize', resize);
 
-    const colors = {
-      dark: [
-        [232, 132, 90],
-        [144, 112, 192],
-        [74, 136, 168],
-        [107, 153, 112],
-        [184, 152, 64],
-      ],
-      light: [
-        [140, 58, 32],
-        [100, 80, 150],
-        [52, 100, 140],
-        [60, 110, 70],
-        [150, 120, 40],
-      ],
-    };
-
-    const count = reducedMotion ? 26 : compactMode ? 40 : 60;
-    const connectionDist = compactMode ? 90 : 150;
+    const count = reducedMotion ? 24 : compactMode ? 36 : 48;
+    const connectionDist = compactMode ? 80 : 120;
     const particles: Particle[] = Array.from({ length: count }).map(() => {
-      const palette = darkRef.current ? colors.dark : colors.light;
+      const palette = darkRef.current ? particlePalettes.dark : particlePalettes.light;
       const colorSet = palette[Math.floor(Math.random() * palette.length)];
       return createParticle(w, h, colorSet, reducedMotion);
     });
