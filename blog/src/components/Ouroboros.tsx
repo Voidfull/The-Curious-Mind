@@ -1,18 +1,6 @@
 import { useTheme } from '../context/ThemeContext';
 
-/**
- * Complex Ouroboros — infinity-loop-shaped serpent
- * Features:
- * - Infinity loop (lemniscate) body path
- * - Detailed overlapping scales along the back
- * - Bony spine details on the underside
- * - Branching tree-root motif in the upper opening
- * - Bonsai tree silhouette in the lower opening
- * - Two-head design (snake biting its own tail)
- * - Detailed heads with eyes, fangs, tongue
- * - Dot-pattern skin texture
- * - Gentle breathing / rotating animations
- */
+
 
 interface OuroborosProps {
   className?: string;
