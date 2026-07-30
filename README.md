@@ -65,7 +65,8 @@ src/
 │   └── ThemeContext.tsx        # Dark/light mode provider
 ├── data/
 │   ├── comments.ts             # Comment CRUD (localStorage)
-│   └── posts.ts                # Post data and helpers
+│   ├── posts-new.ts            # Active post data and helpers
+│   └── posts/                  # Optional markdown post content files
 ├── App.tsx                     # Root component + routing
 ├── index.css                   # Global styles, Tailwind theme, animations
 ├── main.tsx
@@ -74,9 +75,11 @@ src/
 
 ## Adding Posts
 
-Posts live in `src/data/posts.ts`. Add an object to the `posts` array:
+Posts live in `src/data/posts-new.ts`. Add an object to the `posts` array:
 
 ```ts
+import myPostContent from './posts/my-post-slug.md?raw';
+
 {
   id: 'my-post-slug',           // used in the URL hash
   title: 'My Post Title',
@@ -87,8 +90,14 @@ Posts live in `src/data/posts.ts`. Add an object to the `posts` array:
   category: 'essay',            // 'essay' | 'article' | 'interesting-find' | 'note'
   coverEmoji: '🌿',
   excerpt: 'A short summary shown on the post card.',
-  content: `<p>Your HTML content here...</p>`,
+  content: myPostContent,
 }
+```
+
+You can also define content inline:
+
+```ts
+  content: `<p>Your HTML content here...</p>`,
 ```
 
 Content supports standard HTML tags. Headings (`h2`, `h3`), blockquotes, lists, code blocks, and inline `code` all have styled variants via the `.prose-blog` class.

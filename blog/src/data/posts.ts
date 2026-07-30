@@ -1,3 +1,5 @@
+import statisticalSilenceContent from './posts/the-statistical-silence.md?raw';
+
 export interface BlogPost {
   id: string;
   title: string;
