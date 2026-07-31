@@ -54,6 +54,9 @@
   pointer-events: none;
   z-index: 100;
   opacity: 0.4;
+  transform: translateZ(0);
+  will-change: transform;
+  contain: strict;
 }
 
 .dark .grain::before {
