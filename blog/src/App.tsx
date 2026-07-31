@@ -4,62 +4,96 @@ import Header from './components/Header';
 import HomePage from './components/HomePage';
 import PostView from './components/PostView';
 import Footer from './components/Footer';
+import ContactPage from './components/ContactPage';
+import AdminDashboard from './components/AdminDashboard';
+import ReadingProgress from './components/ReadingProgress';
 const AnimatedBackground = lazy(() => import('./components/AnimatedBackground-new'));
 import { getPost } from './data/posts-new';
+import { trackEvent } from './utils/analytics';
 
-type View = { type: 'home' } | { type: 'post'; postId: string };
+type View = { type: 'home' } | { type: 'post'; postId: string } | { type: 'contact' } | { type: 'admin' };
+
+function parseHash(): View {
+  const hash = window.location.hash.slice(1);
+  if (hash === 'contact') return { type: 'contact' };
+  if (hash === 'admin') return { type: 'admin' };
+  if (hash && hash.startsWith('post/')) {
+    const postId = hash.replace('post/', '');
+    if (getPost(postId)) return { type: 'post', postId };
+  }
+  return { type: 'home' };
+}
+
+function setMeta(name: string, content: string, property = false) {
+  const selector = property ? `meta[property="${name}"]` : `meta[name="${name}"]`;
+  let meta = document.head.querySelector<HTMLMetaElement>(selector);
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute(property ? 'property' : 'name', name);
+    document.head.appendChild(meta);
+  }
+  meta.content = content;
+}
+
+function useRouteMetadata(view: View) {
+  useEffect(() => {
+    const post = view.type === 'post' ? getPost(view.postId) : null;
+    const title = post ? `${post.title} | The Curious Mind` : view.type === 'contact' ? 'Contact | The Curious Mind' : 'The Curious Mind - Personal Blog';
+    const description = post?.excerpt || 'Essays, articles, and notes from The Curious Mind.';
+    const url = `${window.location.origin}${window.location.pathname}${window.location.hash}`;
+
+    document.title = title;
+    setMeta('description', description);
+    setMeta('og:title', title, true);
+    setMeta('og:description', description, true);
+    setMeta('og:type', post ? 'article' : 'website', true);
+    setMeta('og:url', url, true);
+    setMeta('twitter:card', 'summary');
+    setMeta('twitter:title', title);
+    setMeta('twitter:description', description);
+  }, [view]);
+}
 
 function BlogApp() {
   const { isDark } = useTheme();
-
-  const [view, setView] = useState<View>(() => {
-    const hash = window.location.hash.slice(1);
-    if (hash && hash.startsWith('post/')) {
-      const postId = hash.replace('post/', '');
-      if (getPost(postId)) {
-        return { type: 'post', postId };
-      }
-    }
-    return { type: 'home' };
-  });
-
+  const [view, setView] = useState<View>(parseHash);
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  useRouteMetadata(view);
 
   useEffect(() => {
     if (view.type === 'post') {
       window.location.hash = `post/${view.postId}`;
-    } else {
-      if (window.location.hash) {
-        history.replaceState(null, '', window.location.pathname);
-      }
+    } else if (view.type === 'contact') {
+      window.location.hash = 'contact';
+    } else if (view.type === 'admin') {
+      window.location.hash = 'admin';
+    } else if (window.location.hash) {
+      history.replaceState(null, '', window.location.pathname);
     }
   }, [view]);
 
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.slice(1);
-      if (hash && hash.startsWith('post/')) {
-        const postId = hash.replace('post/', '');
-        if (getPost(postId)) {
-          setView({ type: 'post', postId });
-          return;
-        }
-      }
-      setView({ type: 'home' });
-    };
-
+    const handleHashChange = () => setView(parseHash());
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   const navigateToPost = useCallback((postId: string) => {
     setView({ type: 'post', postId });
+    trackEvent('post_open', { postId });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const navigateHome = useCallback(() => {
     setView({ type: 'home' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const navigateContact = useCallback(() => {
+    setView({ type: 'contact' });
+    trackEvent('contact_open');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
@@ -69,14 +103,8 @@ function BlogApp() {
   }, []);
 
   const handleTagClick = useCallback((tag: string) => {
-    if (tag) {
-      setActiveTag(tag);
-    } else {
-      setActiveTag(null);
-    }
-    if (view.type === 'post') {
-      navigateHome();
-    }
+    setActiveTag(tag || null);
+    if (view.type !== 'home') navigateHome();
   }, [view.type, navigateHome]);
 
   const currentPost = view.type === 'post' ? getPost(view.postId) : null;
@@ -85,13 +113,12 @@ function BlogApp() {
     <div
       className="grain min-h-screen text-ink dark:text-dark-text relative overflow-x-hidden"
       style={{
-        // Soft gradient background
         background: isDark
           ? 'linear-gradient(180deg, #0a0a0f 0%, #12121c 50%, #0a0a0f 100%)'
           : 'linear-gradient(180deg, #faf8f5 0%, #f5efe7 50%, #faf8f5 100%)',
       }}
     >
-      {/* Extra soft diagonal gradient wash */}
+      <ReadingProgress active={view.type === 'post'} />
       <div
         className="fixed inset-0 pointer-events-none z-0"
         style={{
@@ -101,7 +128,6 @@ function BlogApp() {
         }}
       />
 
-      {/* Animated background — particles, blobs, orbits, constellations */}
       <Suspense fallback={null}>
         <AnimatedBackground />
       </Suspense>
@@ -109,7 +135,8 @@ function BlogApp() {
       <div className="relative z-10">
         <Header
           onNavigateHome={navigateHome}
-          showBack={view.type === 'post'}
+          onNavigateContact={navigateContact}
+          showBack={view.type !== 'home'}
         />
 
         {view.type === 'home' && (
@@ -126,6 +153,7 @@ function BlogApp() {
           <PostView
             post={currentPost}
             onTagClick={handleTagClick}
+            onPostNavigate={navigateToPost}
           />
         )}
 
@@ -146,6 +174,9 @@ function BlogApp() {
             </button>
           </div>
         )}
+
+        {view.type === 'contact' && <ContactPage onNavigateHome={navigateHome} />}
+        {view.type === 'admin' && <AdminDashboard />}
 
         <Footer />
       </div>

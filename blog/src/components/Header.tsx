@@ -9,15 +9,15 @@ const socialLinks = [
 
 interface HeaderProps {
   onNavigateHome: () => void;
+  onNavigateContact: () => void;
   showBack?: boolean;
 }
 
-export default function Header({ onNavigateHome, showBack }: HeaderProps) {
+export default function Header({ onNavigateHome, onNavigateContact, showBack }: HeaderProps) {
   const { isDark, toggle } = useTheme();
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-paper/70 dark:bg-dark-bg/80">
-      {/* Accent line */}
       <div className="h-[2px] bg-gradient-to-r from-transparent via-accent/40 dark:via-dark-accent/40 to-transparent" />
 
       <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -62,6 +62,12 @@ export default function Header({ onNavigateHome, showBack }: HeaderProps) {
                 {index < socialLinks.length - 1 && <span className="pointer-events-none">·</span>}
               </span>
             ))}
+            <button
+              onClick={onNavigateContact}
+              className="hover:text-accent dark:hover:text-dark-accent transition-colors duration-300"
+            >
+              Contact
+            </button>
           </div>
           <span className="hidden sm:block text-[10px] font-mono text-ink-muted/50 dark:text-dark-text-muted/40 tracking-widest uppercase">
             Sbai M. Aziz
