@@ -1,3 +1,15 @@
+---
+id: the-statistical-silence
+title: The Statistical Silence
+subtitle: On entropy, order, and the improbable fact of being here
+date: 2026-06-10
+readTime: 10 min read
+tags: philosophy, science, entropy, meaning
+category: essay
+coverEmoji: 🌌
+excerpt: The universe has a preference. It does not prefer you. And yet - here you are.
+status: published
+---
 The universe has a preference. It does not prefer you. It does not favor your careful arrangements, your clean desk, your tuned instrument, your ordered thoughts. Think of the universe like a constant wind that eventually scatters everything you build, no matter how carefully. Not out of hate, the troubling part is that it's not malice at all. It's just math at work.
 
 ## The Headcount

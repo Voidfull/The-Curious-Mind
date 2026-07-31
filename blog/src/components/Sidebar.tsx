@@ -1,4 +1,5 @@
 import { categories, allTags } from '../data/posts-new';
+import NewsletterSignup from './NewsletterSignup';
 
 interface SidebarProps {
   activeCategory: string;
@@ -29,6 +30,8 @@ export default function Sidebar({ activeCategory, activeTag, onCategoryChange, o
           Maybe some of it will help you think too.
         </p>
       </div>
+
+      <NewsletterSignup />
 
       {/* Categories */}
       <div>
