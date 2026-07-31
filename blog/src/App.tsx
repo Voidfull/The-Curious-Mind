@@ -12,6 +12,7 @@ import { getPost } from './data/posts-new';
 import { trackEvent } from './utils/analytics';
 
 type View = { type: 'home' } | { type: 'post'; postId: string } | { type: 'contact' } | { type: 'admin' };
+type NavigationMode = 'push' | 'replace';
 
 function parseHash(): View {
   const hash = window.location.hash.slice(1);
@@ -22,6 +23,33 @@ function parseHash(): View {
     if (getPost(postId)) return { type: 'post', postId };
   }
   return { type: 'home' };
+}
+
+function routeHash(view: View) {
+  if (view.type === 'post') return `#post/${view.postId}`;
+  if (view.type === 'contact') return '#contact';
+  if (view.type === 'admin') return '#admin';
+  return '';
+}
+
+function routeUrl(view: View) {
+  return `${window.location.pathname}${window.location.search}${routeHash(view)}`;
+}
+
+function sameView(a: View, b: View) {
+  return a.type === b.type && (a.type !== 'post' || (b.type === 'post' && a.postId === b.postId));
+}
+
+function writeRoute(view: View, mode: NavigationMode) {
+  const nextUrl = routeUrl(view);
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (nextUrl === currentUrl) return;
+
+  if (mode === 'replace') {
+    window.history.replaceState(null, '', nextUrl);
+  } else {
+    window.history.pushState(null, '', nextUrl);
+  }
 }
 
 function setMeta(name: string, content: string, property = false) {
@@ -40,7 +68,7 @@ function useRouteMetadata(view: View) {
     const post = view.type === 'post' ? getPost(view.postId) : null;
     const title = post ? `${post.title} | The Curious Mind` : view.type === 'contact' ? 'Contact | The Curious Mind' : 'The Curious Mind - Personal Blog';
     const description = post?.excerpt || 'Essays, articles, and notes from The Curious Mind.';
-    const url = `${window.location.origin}${window.location.pathname}${window.location.hash}`;
+    const url = `${window.location.origin}${routeUrl(view)}`;
 
     document.title = title;
     setMeta('description', description);
@@ -63,39 +91,38 @@ function BlogApp() {
   useRouteMetadata(view);
 
   useEffect(() => {
-    if (view.type === 'post') {
-      window.location.hash = `post/${view.postId}`;
-    } else if (view.type === 'contact') {
-      window.location.hash = 'contact';
-    } else if (view.type === 'admin') {
-      window.location.hash = 'admin';
-    } else if (window.location.hash) {
-      history.replaceState(null, '', window.location.pathname);
-    }
-  }, [view]);
+    const syncFromLocation = () => {
+      const nextView = parseHash();
+      setView((currentView) => (sameView(currentView, nextView) ? currentView : nextView));
+    };
 
-  useEffect(() => {
-    const handleHashChange = () => setView(parseHash());
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', syncFromLocation);
+    window.addEventListener('hashchange', syncFromLocation);
+    return () => {
+      window.removeEventListener('popstate', syncFromLocation);
+      window.removeEventListener('hashchange', syncFromLocation);
+    };
+  }, []);
+
+  const navigateToView = useCallback((nextView: View, mode: NavigationMode = 'push') => {
+    setView((currentView) => (sameView(currentView, nextView) ? currentView : nextView));
+    writeRoute(nextView, mode);
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }, []);
 
   const navigateToPost = useCallback((postId: string) => {
-    setView({ type: 'post', postId });
+    navigateToView({ type: 'post', postId });
     trackEvent('post_open', { postId });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  }, [navigateToView]);
 
   const navigateHome = useCallback(() => {
-    setView({ type: 'home' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+    navigateToView({ type: 'home' });
+  }, [navigateToView]);
 
   const navigateContact = useCallback(() => {
-    setView({ type: 'contact' });
+    navigateToView({ type: 'contact' });
     trackEvent('contact_open');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  }, [navigateToView]);
 
   const handleCategoryChange = useCallback((category: string) => {
     setActiveCategory(category);
@@ -125,6 +152,9 @@ function BlogApp() {
           background: isDark
             ? 'radial-gradient(ellipse at 20% 10%, rgba(232,132,90,0.06), transparent 40%), radial-gradient(ellipse at 80% 90%, rgba(144,112,192,0.05), transparent 40%)'
             : 'radial-gradient(ellipse at 20% 10%, rgba(192,83,43,0.04), transparent 40%), radial-gradient(ellipse at 80% 90%, rgba(144,112,192,0.03), transparent 40%)',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+          contain: 'strict',
         }}
       />
 

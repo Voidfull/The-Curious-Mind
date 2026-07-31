@@ -1,34 +1,53 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function ReadingProgress({ active }: { active: boolean }) {
-  const [progress, setProgress] = useState(0);
+  const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let frameId = 0;
+
+    const setScale = (scale: number) => {
+      if (barRef.current) {
+        barRef.current.style.transform = `scaleX(${scale})`;
+      }
+    };
+
     if (!active) {
-      setProgress(0);
-      return;
+      setScale(0);
+      return () => cancelAnimationFrame(frameId);
     }
 
     const updateProgress = () => {
       const scrollTop = window.scrollY;
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      setProgress(maxScroll > 0 ? Math.min(100, Math.max(0, (scrollTop / maxScroll) * 100)) : 0);
+      const progress = maxScroll > 0 ? Math.min(1, Math.max(0, scrollTop / maxScroll)) : 0;
+      setScale(progress);
+    };
+
+    const requestUpdate = () => {
+      if (frameId) return;
+      frameId = requestAnimationFrame(() => {
+        frameId = 0;
+        updateProgress();
+      });
     };
 
     updateProgress();
-    window.addEventListener('scroll', updateProgress, { passive: true });
-    window.addEventListener('resize', updateProgress);
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    window.addEventListener('resize', requestUpdate);
     return () => {
-      window.removeEventListener('scroll', updateProgress);
-      window.removeEventListener('resize', updateProgress);
+      cancelAnimationFrame(frameId);
+      window.removeEventListener('scroll', requestUpdate);
+      window.removeEventListener('resize', requestUpdate);
     };
   }, [active]);
 
   return (
     <div className="fixed left-0 right-0 top-0 z-[60] h-[2px] pointer-events-none">
       <div
-        className="h-full bg-accent dark:bg-dark-accent transition-[width] duration-150"
-        style={{ width: active ? `${progress}%` : '0%' }}
+        ref={barRef}
+        className="h-full w-full origin-left bg-accent dark:bg-dark-accent transform-gpu transition-transform duration-75 will-change-transform"
+        style={{ transform: 'scaleX(0)' }}
       />
     </div>
   );
