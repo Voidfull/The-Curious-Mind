@@ -1,6 +1,6 @@
 import { Search, X } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
-import { getPostsByCategory, getPostsByTag } from '../data/posts-new';
+import { getPostsByCategoryFrom, getPostsByTagFrom } from '../data/posts-new';
 import type { BlogPost } from '../data/posts-new';
 import PostCard from './PostCard';
 import Sidebar from './Sidebar';
@@ -9,6 +9,8 @@ import Ouroboros from './Ouroboros';
 import { trackEvent } from '../utils/analytics';
 
 interface HomePageProps {
+  posts: BlogPost[];
+  allTags: string[];
   onPostClick: (postId: string) => void;
   activeCategory: string;
   activeTag: string | null;
@@ -17,6 +19,8 @@ interface HomePageProps {
 }
 
 export default function HomePage({
+  posts,
+  allTags,
   onPostClick,
   activeCategory,
   activeTag,
@@ -29,9 +33,9 @@ export default function HomePage({
     let result: BlogPost[];
 
     if (activeTag) {
-      result = getPostsByTag(activeTag);
+      result = getPostsByTagFrom(posts, activeTag);
     } else {
-      result = getPostsByCategory(activeCategory);
+      result = getPostsByCategoryFrom(posts, activeCategory);
     }
 
     if (searchQuery.trim()) {
@@ -46,7 +50,7 @@ export default function HomePage({
     }
 
     return result;
-  }, [activeCategory, activeTag, searchQuery]);
+  }, [activeCategory, activeTag, posts, searchQuery]);
 
   useEffect(() => {
     const cleanQuery = searchQuery.trim();
@@ -170,6 +174,7 @@ export default function HomePage({
               activeTag={activeTag}
               onCategoryChange={onCategoryChange}
               onTagClick={onTagClick}
+              allTags={allTags}
             />
           </div>
         </div>

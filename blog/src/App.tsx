@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useCallback, useEffect } from 'react';
+import { Suspense, lazy, useState, useCallback, useEffect, useMemo } from 'react';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import Header from './components/Header';
 import HomePage from './components/HomePage';
@@ -8,11 +8,14 @@ import ContactPage from './components/ContactPage';
 import AdminDashboard from './components/AdminDashboard';
 import ReadingProgress from './components/ReadingProgress';
 const AnimatedBackground = lazy(() => import('./components/AnimatedBackground-new'));
-import { getPost } from './data/posts-new';
+import { getAllTags, getPostFrom, mergePosts, posts as staticPosts } from './data/posts-new';
+import { fetchPublishedPosts } from './utils/postsApi';
 import { trackEvent } from './utils/analytics';
 
 type View = { type: 'home' } | { type: 'post'; postId: string } | { type: 'contact' } | { type: 'admin' };
 type NavigationMode = 'push' | 'replace';
+
+const POST_HASH_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function parseHash(): View {
   const hash = window.location.hash.slice(1);
@@ -20,7 +23,7 @@ function parseHash(): View {
   if (hash === 'admin') return { type: 'admin' };
   if (hash && hash.startsWith('post/')) {
     const postId = hash.replace('post/', '');
-    if (getPost(postId)) return { type: 'post', postId };
+    if (POST_HASH_PATTERN.test(postId)) return { type: 'post', postId };
   }
   return { type: 'home' };
 }
@@ -63,9 +66,9 @@ function setMeta(name: string, content: string, property = false) {
   meta.content = content;
 }
 
-function useRouteMetadata(view: View) {
+function useRouteMetadata(view: View, postSource: typeof staticPosts) {
   useEffect(() => {
-    const post = view.type === 'post' ? getPost(view.postId) : null;
+    const post = view.type === 'post' ? getPostFrom(postSource, view.postId) : null;
     const title = post ? `${post.title} | The Curious Mind` : view.type === 'contact' ? 'Contact | The Curious Mind' : 'The Curious Mind - Personal Blog';
     const description = post?.excerpt || 'Essays, articles, and notes from The Curious Mind.';
     const url = `${window.location.origin}${routeUrl(view)}`;
@@ -79,7 +82,7 @@ function useRouteMetadata(view: View) {
     setMeta('twitter:card', 'summary');
     setMeta('twitter:title', title);
     setMeta('twitter:description', description);
-  }, [view]);
+  }, [postSource, view]);
 }
 
 function BlogApp() {
@@ -87,8 +90,23 @@ function BlogApp() {
   const [view, setView] = useState<View>(parseHash);
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [blogPosts, setBlogPosts] = useState(staticPosts);
+  const [postsLoading, setPostsLoading] = useState(true);
 
-  useRouteMetadata(view);
+  const allTags = useMemo(() => getAllTags(blogPosts), [blogPosts]);
+
+  const loadPublishedPosts = useCallback(async () => {
+    setPostsLoading(true);
+    const managedPosts = await fetchPublishedPosts();
+    setBlogPosts(mergePosts(staticPosts, managedPosts));
+    setPostsLoading(false);
+  }, []);
+
+  useRouteMetadata(view, blogPosts);
+
+  useEffect(() => {
+    loadPublishedPosts();
+  }, [loadPublishedPosts]);
 
   useEffect(() => {
     const syncFromLocation = () => {
@@ -134,7 +152,7 @@ function BlogApp() {
     if (view.type !== 'home') navigateHome();
   }, [view.type, navigateHome]);
 
-  const currentPost = view.type === 'post' ? getPost(view.postId) : null;
+  const currentPost = view.type === 'post' ? getPostFrom(blogPosts, view.postId) : null;
 
   return (
     <div
@@ -171,6 +189,8 @@ function BlogApp() {
 
         {view.type === 'home' && (
           <HomePage
+            posts={blogPosts}
+            allTags={allTags}
             onPostClick={navigateToPost}
             activeCategory={activeCategory}
             activeTag={activeTag}
@@ -182,12 +202,19 @@ function BlogApp() {
         {view.type === 'post' && currentPost && (
           <PostView
             post={currentPost}
+            posts={blogPosts}
             onTagClick={handleTagClick}
             onPostNavigate={navigateToPost}
           />
         )}
 
-        {view.type === 'post' && !currentPost && (
+        {view.type === 'post' && !currentPost && postsLoading && (
+          <div className="max-w-3xl mx-auto px-6 py-24 text-center">
+            <p className="text-ink-muted/40 dark:text-dark-text-muted/50 font-mono text-xs tracking-widest uppercase animate-pulse">Loading...</p>
+          </div>
+        )}
+
+        {view.type === 'post' && !currentPost && !postsLoading && (
           <div className="max-w-3xl mx-auto px-6 py-24 text-center">
             <div className="font-serif text-6xl text-ink/10 dark:text-dark-text/10 mb-6 italic">?</div>
             <h2 className="font-serif text-3xl font-semibold text-ink dark:text-dark-text italic mb-3">
@@ -206,7 +233,7 @@ function BlogApp() {
         )}
 
         {view.type === 'contact' && <ContactPage onNavigateHome={navigateHome} />}
-        {view.type === 'admin' && <AdminDashboard />}
+        {view.type === 'admin' && <AdminDashboard onPostsChanged={loadPublishedPosts} />}
 
         <Footer />
       </div>

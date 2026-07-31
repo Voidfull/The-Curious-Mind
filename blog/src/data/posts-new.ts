@@ -28,6 +28,14 @@ interface ParsedMarkdown {
 
 const rawPosts = [statisticalSilenceRaw, moralRiskRaw];
 
+export const categories = [
+  { id: 'all', label: 'All Posts', emoji: 'spark' },
+  { id: 'essay', label: 'Essays', emoji: 'essay' },
+  { id: 'article', label: 'Articles', emoji: 'article' },
+  { id: 'interesting-find', label: 'Interesting Finds', emoji: 'find' },
+  { id: 'note', label: 'Notes', emoji: 'note' },
+];
+
 const categorySet = new Set<BlogPostCategory>(['essay', 'article', 'interesting-find', 'note']);
 
 function parseFrontmatter(raw: string): ParsedMarkdown {
@@ -78,6 +86,10 @@ function statusValue(frontmatter: Frontmatter): BlogPostStatus {
   return stringValue(frontmatter, 'status', 'published') === 'draft' ? 'draft' : 'published';
 }
 
+function sortByDateDesc(source: BlogPost[]) {
+  return [...source].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
 function postFromMarkdown(raw: string): BlogPost {
   const { frontmatter, content } = parseFrontmatter(raw);
   const id = stringValue(frontmatter, 'id');
@@ -101,47 +113,45 @@ function postFromMarkdown(raw: string): BlogPost {
   };
 }
 
-export const allPosts: BlogPost[] = rawPosts
-  .map(postFromMarkdown)
-  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
+export const allPosts: BlogPost[] = sortByDateDesc(rawPosts.map(postFromMarkdown));
 export const posts: BlogPost[] = allPosts.filter(post => post.status === 'published');
-
-export const categories = [
-  { id: 'all', label: 'All Posts', emoji: '✨' },
-  { id: 'essay', label: 'Essays', emoji: '✍️' },
-  { id: 'article', label: 'Articles', emoji: '📄' },
-  { id: 'interesting-find', label: 'Interesting Finds', emoji: '🔍' },
-  { id: 'note', label: 'Notes', emoji: '📝' },
-];
-
-export const allTags = Array.from(new Set(posts.flatMap(post => post.tags))).sort();
 export const validPostIds = new Set(posts.map(post => post.id));
+export const allTags = getAllTags(posts);
 
-export function getPost(id: string, includeDrafts = false): BlogPost | undefined {
-  const source = includeDrafts ? allPosts : posts;
-  return source.find(post => post.id === id);
+export function getAllTags(source: BlogPost[] = posts): string[] {
+  return Array.from(new Set(source.flatMap(post => post.tags))).sort();
 }
 
-export function getPostsByCategory(category: string): BlogPost[] {
-  if (category === 'all') return posts;
-  return posts.filter(post => post.category === category);
+export function mergePosts(staticSource: BlogPost[], managedSource: BlogPost[]): BlogPost[] {
+  const merged = new Map<string, BlogPost>();
+  for (const post of staticSource) merged.set(post.id, post);
+  for (const post of managedSource) merged.set(post.id, post);
+  return sortByDateDesc(Array.from(merged.values()).filter(post => post.status === 'published'));
 }
 
-export function getPostsByTag(tag: string): BlogPost[] {
-  return posts.filter(post => post.tags.includes(tag));
+export function getPostFrom(source: BlogPost[], id: string, includeDrafts = false): BlogPost | undefined {
+  return source.find(post => post.id === id && (includeDrafts || post.status === 'published'));
 }
 
-export function getAdjacentPosts(id: string) {
-  const index = posts.findIndex(post => post.id === id);
+export function getPostsByCategoryFrom(source: BlogPost[], category: string): BlogPost[] {
+  if (category === 'all') return source;
+  return source.filter(post => post.category === category);
+}
+
+export function getPostsByTagFrom(source: BlogPost[], tag: string): BlogPost[] {
+  return source.filter(post => post.tags.includes(tag));
+}
+
+export function getAdjacentPostsFrom(source: BlogPost[], id: string) {
+  const index = source.findIndex(post => post.id === id);
   return {
-    previous: index > 0 ? posts[index - 1] : undefined,
-    next: index >= 0 && index < posts.length - 1 ? posts[index + 1] : undefined,
+    previous: index > 0 ? source[index - 1] : undefined,
+    next: index >= 0 && index < source.length - 1 ? source[index + 1] : undefined,
   };
 }
 
-export function getRelatedPosts(post: BlogPost, limit = 3): BlogPost[] {
-  return posts
+export function getRelatedPostsFrom(source: BlogPost[], post: BlogPost, limit = 3): BlogPost[] {
+  return source
     .filter(candidate => candidate.id !== post.id)
     .map(candidate => ({
       post: candidate,
@@ -151,4 +161,24 @@ export function getRelatedPosts(post: BlogPost, limit = 3): BlogPost[] {
     .sort((a, b) => b.score - a.score || new Date(b.post.date).getTime() - new Date(a.post.date).getTime())
     .slice(0, limit)
     .map(candidate => candidate.post);
+}
+
+export function getPost(id: string, includeDrafts = false): BlogPost | undefined {
+  return getPostFrom(includeDrafts ? allPosts : posts, id, includeDrafts);
+}
+
+export function getPostsByCategory(category: string): BlogPost[] {
+  return getPostsByCategoryFrom(posts, category);
+}
+
+export function getPostsByTag(tag: string): BlogPost[] {
+  return getPostsByTagFrom(posts, tag);
+}
+
+export function getAdjacentPosts(id: string) {
+  return getAdjacentPostsFrom(posts, id);
+}
+
+export function getRelatedPosts(post: BlogPost, limit = 3): BlogPost[] {
+  return getRelatedPostsFrom(posts, post, limit);
 }

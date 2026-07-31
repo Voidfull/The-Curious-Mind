@@ -3,7 +3,7 @@ import { Clock, Calendar, Eye, ArrowLeft, ArrowRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useEffect, useState } from 'react';
 import type { BlogPost } from '../data/posts-new';
-import { getAdjacentPosts, getRelatedPosts } from '../data/posts-new';
+import { getAdjacentPostsFrom, getRelatedPostsFrom } from '../data/posts-new';
 import CommentSection from './CommentSection';
 import { ArtisticDivider, WavyLine } from './Decorations';
 import Ouroboros from './Ouroboros';
@@ -12,6 +12,7 @@ import { trackEvent } from '../utils/analytics';
 
 interface PostViewProps {
   post: BlogPost;
+  posts: BlogPost[];
   onTagClick: (tag: string) => void;
   onPostNavigate: (postId: string) => void;
 }
@@ -49,10 +50,10 @@ function RelatedPostLink({ post, onClick }: { post: BlogPost; onClick: () => voi
   );
 }
 
-export default function PostView({ post, onTagClick, onPostNavigate }: PostViewProps) {
+export default function PostView({ post, posts, onTagClick, onPostNavigate }: PostViewProps) {
   const [viewCount, setViewCount] = useState(() => getPostViewCount(post.id));
-  const { previous, next } = getAdjacentPosts(post.id);
-  const relatedPosts = getRelatedPosts(post);
+  const { previous, next } = getAdjacentPostsFrom(posts, post.id);
+  const relatedPosts = getRelatedPostsFrom(posts, post);
 
   useEffect(() => {
     setViewCount(incrementPostView(post.id));

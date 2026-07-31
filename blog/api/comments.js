@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import { timingSafeEqual } from 'node:crypto';
 
 export const VALID_POST_IDS = new Set([
   'the-statistical-silence',
@@ -14,6 +15,7 @@ export const RATE_LIMIT_MAX_REQUESTS = 5;
 export const REACTION_KEYS = new Set(['heart', 'thought', 'spark']);
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const POST_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const rateLimitBuckets = new Map();
 
 function firstValue(value) {
@@ -34,13 +36,26 @@ function getClientIp(req) {
 }
 
 function getAdminToken(req) {
-  return firstValue(req.query?.adminToken) || req.headers?.['x-admin-token'];
+  const authorization = firstValue(req.headers?.authorization);
+  if (typeof authorization === 'string') {
+    const match = authorization.match(/^Bearer\s+(.+)$/i);
+    if (match) return match[1];
+  }
+
+  return firstValue(req.headers?.['x-admin-token']);
+}
+
+function constantTimeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const aBuffer = Buffer.from(a);
+  const bBuffer = Buffer.from(b);
+  return aBuffer.length === bBuffer.length && timingSafeEqual(aBuffer, bBuffer);
 }
 
 function isAdmin(req) {
   const expected = process.env.ADMIN_TOKEN;
   const provided = getAdminToken(req);
-  return Boolean(expected && typeof provided === 'string' && provided === expected);
+  return Boolean(expected && provided && constantTimeEqual(provided, expected));
 }
 
 function cleanupRateLimits(now) {
@@ -81,16 +96,21 @@ export function checkRateLimit(req, now = Date.now()) {
   };
 }
 
-export function validatePostId(postId) {
+export function validatePostId(postId, { allowDynamic = false } = {}) {
   if (typeof postId !== 'string' || !postId.trim()) {
     return { error: 'postId required' };
   }
 
-  if (!VALID_POST_IDS.has(postId)) {
-    return { error: 'Unknown postId' };
+  const cleanPostId = postId.trim();
+  if (VALID_POST_IDS.has(cleanPostId)) {
+    return { value: cleanPostId };
   }
 
-  return { value: postId };
+  if (allowDynamic && POST_ID_PATTERN.test(cleanPostId)) {
+    return { value: cleanPostId };
+  }
+
+  return { error: 'Unknown postId' };
 }
 
 export function parseCommentLimit(limitValue) {
@@ -123,7 +143,7 @@ export function validateCommentBody(body) {
     return { error: 'JSON body required' };
   }
 
-  const postValidation = validatePostId(body.post_id);
+  const postValidation = validatePostId(body.post_id, { allowDynamic: true });
   if (postValidation.error) {
     return { error: postValidation.error.replace('postId', 'post_id') };
   }
@@ -220,6 +240,38 @@ async function initDB() {
   await sql`ALTER TABLE comments ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN NOT NULL DEFAULT FALSE;`;
 
   await sql`
+    CREATE TABLE IF NOT EXISTS posts (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      subtitle TEXT,
+      date DATE NOT NULL,
+      read_time TEXT NOT NULL,
+      tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+      category TEXT NOT NULL,
+      excerpt TEXT NOT NULL,
+      content TEXT NOT NULL,
+      cover_emoji TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      CONSTRAINT posts_category_check CHECK (category IN ('essay', 'article', 'interesting-find', 'note')),
+      CONSTRAINT posts_status_check CHECK (status IN ('draft', 'published'))
+    );
+  `;
+
+  await sql`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'posts_category_check') THEN
+        ALTER TABLE posts ADD CONSTRAINT posts_category_check CHECK (category IN ('essay', 'article', 'interesting-find', 'note'));
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'posts_status_check') THEN
+        ALTER TABLE posts ADD CONSTRAINT posts_status_check CHECK (status IN ('draft', 'published'));
+      END IF;
+    END $$;
+  `;
+
+  await sql`
     CREATE TABLE IF NOT EXISTS comment_reactions (
       comment_id UUID NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
       reaction_key TEXT NOT NULL,
@@ -238,6 +290,16 @@ async function initDB() {
     CREATE INDEX IF NOT EXISTS comments_parent_id_idx
     ON comments (parent_id);
   `;
+}
+
+async function assertKnownPostId(postId) {
+  if (VALID_POST_IDS.has(postId)) return true;
+  const { rows } = await sql`
+    SELECT id FROM posts
+    WHERE id = ${postId} AND status = 'published'
+    LIMIT 1
+  `;
+  return rows.length === 1;
 }
 
 async function getComments({ postId, limit, includeHidden = false }) {
@@ -287,7 +349,7 @@ export default async function handler(req, res) {
   // CORS stays permissive because the user explicitly asked not to change it.
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Token');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Token, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -302,8 +364,9 @@ export default async function handler(req, res) {
         return res.status(200).json(await getComments({ postId: null, limit: limitValidation.value, includeHidden: true }));
       }
 
-      const postValidation = validatePostId(firstValue(req.query?.postId));
+      const postValidation = validatePostId(firstValue(req.query?.postId), { allowDynamic: true });
       if (postValidation.error) return jsonError(res, 400, postValidation.error);
+      if (!(await assertKnownPostId(postValidation.value))) return jsonError(res, 400, 'Unknown postId');
 
       const limitValidation = parseCommentLimit(req.query?.limit);
       if (limitValidation.error) return jsonError(res, 400, limitValidation.error);
@@ -347,6 +410,7 @@ export default async function handler(req, res) {
 
       const bodyValidation = validateCommentBody(req.body);
       if (bodyValidation.error) return jsonError(res, 400, bodyValidation.error);
+      if (!(await assertKnownPostId(bodyValidation.value.post_id))) return jsonError(res, 400, 'Unknown postId');
 
       const parentOk = await assertParentBelongsToPost(bodyValidation.value.parent_id, bodyValidation.value.post_id);
       if (!parentOk) return jsonError(res, 400, 'parent_id does not belong to this post');
