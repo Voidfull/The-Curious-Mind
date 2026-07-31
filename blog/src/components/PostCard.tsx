@@ -8,6 +8,7 @@ interface PostCardProps {
   post: BlogPost;
   onClick: () => void;
   index: number;
+  searchQuery?: string;
 }
 
 const categoryStyles: Record<string, { border: string; accent: string; label: string }> = {
@@ -33,7 +34,25 @@ const categoryStyles: Record<string, { border: string; accent: string; label: st
   },
 };
 
-export default function PostCard({ post, onClick, index }: PostCardProps) {
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightText(value: string, query?: string) {
+  const cleanQuery = query?.trim();
+  if (!cleanQuery) return value;
+
+  const regex = new RegExp(`(${escapeRegExp(cleanQuery)})`, 'ig');
+  return value.split(regex).map((part, index) => (
+    part.toLowerCase() === cleanQuery.toLowerCase() ? (
+      <mark key={`${part}-${index}`} className="bg-gold/20 dark:bg-gold/20 text-inherit rounded-sm px-0.5">
+        {part}
+      </mark>
+    ) : part
+  ));
+}
+
+export default function PostCard({ post, onClick, index, searchQuery }: PostCardProps) {
   const commentCount = getCommentCount(post.id);
   const style = categoryStyles[post.category];
 
@@ -53,12 +72,10 @@ export default function PostCard({ post, onClick, index }: PostCardProps) {
       style={{ animationDelay: `${index * 100}ms`, opacity: 0 }}
     >
       <div className={`relative p-6 sm:p-8 border-l-[3px] ${style.border} hover:bg-paper-warm/40 dark:hover:bg-dark-surface/50 transition-all duration-500 rounded-r-lg`}>
-        {/* Corner decoration on hover */}
         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-500">
           <CornerDecoration position="top-right" />
         </div>
 
-        {/* Meta row */}
         <div className="flex items-center gap-3 mb-4">
           <IssueNumber number={index + 1} />
           <span className={`text-[11px] font-mono uppercase tracking-[0.15em] ${style.accent}`}>
@@ -70,11 +87,10 @@ export default function PostCard({ post, onClick, index }: PostCardProps) {
           </time>
         </div>
 
-        {/* Title + emoji */}
         <div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
             <h2 className="font-serif text-2xl sm:text-[1.75rem] font-semibold text-ink dark:text-dark-text leading-snug tracking-tight group-hover:text-accent dark:group-hover:text-dark-accent transition-colors duration-300">
-              {post.title}
+              {highlightText(post.title, searchQuery)}
               <ArrowUpRight
                 size={18}
                 className="inline-block ml-2 opacity-0 -translate-x-2 translate-y-1 group-hover:opacity-60 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-300"
@@ -82,14 +98,13 @@ export default function PostCard({ post, onClick, index }: PostCardProps) {
             </h2>
             {post.subtitle && (
               <p className="mt-2 text-sm italic text-ink-muted dark:text-dark-text-muted font-serif text-[1.05rem]">
-                — {post.subtitle}
+                - {highlightText(post.subtitle, searchQuery)}
               </p>
             )}
             <p className="mt-3 text-[0.95rem] text-ink-light/80 dark:text-dark-text-muted/80 leading-relaxed line-clamp-2">
-              {post.excerpt}
+              {highlightText(post.excerpt, searchQuery)}
             </p>
 
-            {/* Footer */}
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-1.5 text-[11px] font-mono text-ink-muted/60 dark:text-dark-text-muted/60">
                 <Clock size={12} />
@@ -108,14 +123,13 @@ export default function PostCard({ post, onClick, index }: PostCardProps) {
                     key={tag}
                     className="text-[10px] font-mono px-2 py-0.5 rounded-sm border border-ink/5 dark:border-dark-border/50 text-ink-muted/70 dark:text-dark-text-muted/60 tracking-wider"
                   >
-                    {tag}
+                    {highlightText(tag, searchQuery)}
                   </span>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Emoji card */}
           {post.coverEmoji && (
             <div className="hidden sm:flex items-center justify-center w-16 h-16 rounded-2xl bg-paper-warm/60 dark:bg-dark-surface-2/50 border border-ink/[0.03] dark:border-dark-border/30 group-hover:scale-105 group-hover:rotate-3 transition-all duration-500 flex-shrink-0">
               <span className="text-2xl">{post.coverEmoji}</span>

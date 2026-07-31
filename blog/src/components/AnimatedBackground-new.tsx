@@ -69,15 +69,31 @@ function ParticleCanvas({ compactMode, reducedMotion }: { compactMode: boolean; 
 
     let w = 0;
     let h = 0;
+    let dpr = 1;
+    let resizeFrame = 0;
     const resize = () => {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    const requestResize = () => {
+      if (resizeFrame) return;
+      resizeFrame = requestAnimationFrame(() => {
+        resizeFrame = 0;
+        resize();
+      });
     };
     resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', requestResize);
 
-    const count = reducedMotion ? 24 : compactMode ? 36 : 48;
-    const connectionDist = compactMode ? 80 : 120;
+    const count = reducedMotion ? 10 : compactMode ? 22 : 32;
+    const connectionDist = compactMode ? 75 : 105;
+    const connectionDistSq = connectionDist * connectionDist;
     const particles: Particle[] = Array.from({ length: count }).map(() => {
       const palette = darkRef.current ? particlePalettes.dark : particlePalettes.light;
       const colorSet = palette[Math.floor(Math.random() * palette.length)];
@@ -85,11 +101,13 @@ function ParticleCanvas({ compactMode, reducedMotion }: { compactMode: boolean; 
     });
 
     let animId = 0;
+    let frame = 0;
 
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
       const dark = darkRef.current;
       const baseAlpha = dark ? 1.05 : 1.2;
+      frame += 1;
 
       for (const p of particles) {
         p.wanderAngle += (Math.random() - 0.5) * 0.08;
@@ -147,18 +165,21 @@ function ParticleCanvas({ compactMode, reducedMotion }: { compactMode: boolean; 
         }
       }
 
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < connectionDist) {
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(${particles[i].color},${(1 - dist / connectionDist) * 0.07 * baseAlpha})`;
-            ctx.lineWidth = 0.35;
-            ctx.stroke();
+      if (!reducedMotion && frame % 2 === 0) {
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const distSq = dx * dx + dy * dy;
+            if (distSq < connectionDistSq) {
+              const dist = Math.sqrt(distSq);
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(${particles[i].color},${(1 - dist / connectionDist) * 0.07 * baseAlpha})`;
+              ctx.lineWidth = 0.35;
+              ctx.stroke();
+            }
           }
         }
       }
@@ -168,9 +189,20 @@ function ParticleCanvas({ compactMode, reducedMotion }: { compactMode: boolean; 
 
     draw();
 
+    const handleVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(animId);
+        return;
+      }
+      draw();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
       cancelAnimationFrame(animId);
-      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(resizeFrame);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('resize', requestResize);
     };
   }, [compactMode, reducedMotion, isDark]);
 
@@ -178,7 +210,7 @@ function ParticleCanvas({ compactMode, reducedMotion }: { compactMode: boolean; 
     <canvas
       ref={canvasRef}
       className="fixed inset-0 w-full h-full pointer-events-none z-0"
-      style={{ opacity: compactMode ? 0.7 : 0.9 }}
+      style={{ opacity: compactMode ? 0.7 : 0.9, transform: 'translateZ(0)', willChange: 'transform', contain: 'strict' }}
     />
   );
 }
@@ -195,6 +227,7 @@ function AuroraWave({ color, delay, duration, y, opacity = 0.45 }: { color: stri
         animation: `aurora-slide ${duration}s linear infinite`,
         animationDelay: `${delay}s`,
         opacity,
+        willChange: 'transform',
       }}
     />
   );
@@ -214,6 +247,7 @@ function PulsingHalo({ x, y, size, color, delay }: { x: string; y: string; size:
         animationDelay: `${delay}s`,
         opacity: 0.2,
         transform: 'translate(-50%, -50%)',
+        willChange: 'transform, opacity',
       }}
     />
   );
@@ -230,6 +264,7 @@ function InkBlot({ path, x, y, size, color, rotateDuration, delay }: { path: str
         height: size,
         animation: `float ${18 + delay * 2}s ease-in-out infinite, spin-slow ${rotateDuration}s linear infinite`,
         animationDelay: `${delay}s`,
+        willChange: 'transform',
       }}
       viewBox="0 0 200 200"
     >
@@ -248,6 +283,7 @@ function SacredRing({ x, y, size, color, duration, reverse }: { x: string; y: st
         width: size,
         height: size,
         animation: `spin-slow ${duration}s linear infinite ${reverse ? 'reverse' : ''}`,
+        willChange: 'transform',
       }}
       viewBox="0 0 100 100"
     >
@@ -273,6 +309,7 @@ function FloatingGlyph({ char, x, y, size, color, delay, duration }: { char: str
         color,
         animation: `float ${duration}s ease-in-out infinite, twinkle ${duration * 0.7}s ease-in-out infinite`,
         animationDelay: `${delay}s`,
+        willChange: 'transform, opacity',
       }}
     >
       {char}
@@ -313,7 +350,10 @@ export default function AnimatedBackground() {
   const glyphOpacity = isDark ? 0.12 : 0.06;
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div
+      className="fixed inset-0 pointer-events-none overflow-hidden z-0"
+      style={{ transform: 'translateZ(0)', willChange: 'transform', contain: 'strict' }}
+    >
       <ParticleCanvas compactMode={compactMode} reducedMotion={reducedMotion} />
 
       <AuroraWave color={`${accent}0.04)`} delay={0} duration={30} y="5%" opacity={compactMode ? 0.24 : 0.5} />
