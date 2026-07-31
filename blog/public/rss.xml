@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>The Curious Mind</title>
+    <link>https://the-curious-mind.vercel.app</link>
+    <description>Essays, articles, and notes from The Curious Mind.</description>
+    <lastBuildDate>Thu, 30 Jul 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>The Necessity of Moral Risk</title>
+      <link>https://the-curious-mind.vercel.app/#post/the-necessity-of-moral-risk</link>
+      <guid>https://the-curious-mind.vercel.app/#post/the-necessity-of-moral-risk</guid>
+      <pubDate>Thu, 30 Jul 2026 00:00:00 GMT</pubDate>
+      <description>Moral risk is not a flaw in development; it is the structure of development itself.</description>
+    </item>
+    <item>
+      <title>The Statistical Silence</title>
+      <link>https://the-curious-mind.vercel.app/#post/the-statistical-silence</link>
+      <guid>https://the-curious-mind.vercel.app/#post/the-statistical-silence</guid>
+      <pubDate>Wed, 10 Jun 2026 00:00:00 GMT</pubDate>
+      <description>The universe has a preference. It does not prefer you. And yet - here you are.</description>
+    </item>
+  </channel>
+</rss>

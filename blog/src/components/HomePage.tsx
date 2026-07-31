@@ -1,13 +1,16 @@
 import { Search, X } from 'lucide-react';
-import { useState, useMemo } from 'react';
-import { getPostsByCategory, getPostsByTag } from '../data/posts-new';
+import { useState, useMemo, useEffect } from 'react';
+import { getPostsByCategoryFrom, getPostsByTagFrom } from '../data/posts-new';
 import type { BlogPost } from '../data/posts-new';
 import PostCard from './PostCard';
 import Sidebar from './Sidebar';
 import { WavyLine } from './Decorations';
 import Ouroboros from './Ouroboros';
+import { trackEvent } from '../utils/analytics';
 
 interface HomePageProps {
+  posts: BlogPost[];
+  allTags: string[];
   onPostClick: (postId: string) => void;
   activeCategory: string;
   activeTag: string | null;
@@ -16,6 +19,8 @@ interface HomePageProps {
 }
 
 export default function HomePage({
+  posts,
+  allTags,
   onPostClick,
   activeCategory,
   activeTag,
@@ -28,34 +33,43 @@ export default function HomePage({
     let result: BlogPost[];
 
     if (activeTag) {
-      result = getPostsByTag(activeTag);
+      result = getPostsByTagFrom(posts, activeTag);
     } else {
-      result = getPostsByCategory(activeCategory);
+      result = getPostsByCategoryFrom(posts, activeCategory);
     }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
-        p =>
-          p.title.toLowerCase().includes(q) ||
-          p.excerpt.toLowerCase().includes(q) ||
-          p.tags.some(t => t.toLowerCase().includes(q))
+        post =>
+          post.title.toLowerCase().includes(q) ||
+          post.excerpt.toLowerCase().includes(q) ||
+          post.subtitle?.toLowerCase().includes(q) ||
+          post.tags.some(tag => tag.toLowerCase().includes(q))
       );
     }
 
     return result;
-  }, [activeCategory, activeTag, searchQuery]);
+  }, [activeCategory, activeTag, posts, searchQuery]);
+
+  useEffect(() => {
+    const cleanQuery = searchQuery.trim();
+    if (!cleanQuery) return;
+
+    const timeoutId = window.setTimeout(() => {
+      trackEvent('search', { query: cleanQuery, results: filteredPosts.length });
+    }, 500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [filteredPosts.length, searchQuery]);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-12 sm:py-16 relative">
-      {/* Hero Section — centered Ouroboros with title */}
       <div className="mb-16 animate-fade-in relative text-center">
-        {/* Big decorative Ouroboros as the hero centerpiece */}
         <div className="flex justify-center mb-6">
           <Ouroboros size={280} opacity={0.85} />
         </div>
 
-        {/* Label */}
         <div className="flex items-center justify-center gap-3 mb-5">
           <div className="w-8 h-px bg-gradient-to-r from-transparent to-ink/15 dark:to-dark-accent/30" />
           <span className="text-[10px] font-mono text-ink-muted/50 dark:text-dark-text-muted/50 tracking-[0.25em] uppercase">
@@ -64,7 +78,6 @@ export default function HomePage({
           <div className="w-8 h-px bg-gradient-to-l from-transparent to-ink/15 dark:to-dark-accent/30" />
         </div>
 
-        {/* Title */}
         <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold text-ink dark:text-dark-text leading-[1.15] tracking-tight">
           <span className="italic">The</span>{' '}
           <span className="relative inline-block">
@@ -83,7 +96,6 @@ export default function HomePage({
           Mind
         </h1>
 
-        {/* Subtitle */}
         <p className="mt-5 text-base sm:text-lg text-ink-light/70 dark:text-dark-text-muted/80 max-w-xl mx-auto leading-relaxed font-light">
           Essays, articles, and interesting things I've written with 🧡.
           <span className="block mt-1 text-ink-muted/50 dark:text-dark-text-muted/50 text-sm italic font-serif">
@@ -95,15 +107,13 @@ export default function HomePage({
       </div>
 
       <div className="flex flex-col lg:flex-row gap-14">
-        {/* Main Content */}
         <main className="flex-1 min-w-0">
-          {/* Search */}
           <div className="relative mb-10 animate-fade-in" style={{ animationDelay: '150ms', opacity: 0 }}>
             <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted/30 dark:text-dark-text-muted/40" />
             <input
               type="text"
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={event => setSearchQuery(event.target.value)}
               placeholder="Search essays, articles, finds..."
               className="w-full pl-11 pr-10 py-3 border-b border-ink/8 dark:border-dark-border/40 bg-transparent text-ink dark:text-dark-text placeholder:text-ink-muted/25 dark:placeholder:text-dark-text-muted/30 focus:outline-none focus:border-accent/30 dark:focus:border-dark-accent/40 text-sm font-mono tracking-wide transition-all"
             />
@@ -117,7 +127,6 @@ export default function HomePage({
             )}
           </div>
 
-          {/* Active filter */}
           {activeTag && (
             <div className="mb-8 flex items-center justify-center gap-3 text-sm animate-fade-in">
               <span className="text-ink-muted/60 dark:text-dark-text-muted/60 font-mono text-xs tracking-wider">Filtered by</span>
@@ -128,12 +137,11 @@ export default function HomePage({
                 onClick={() => onTagClick('')}
                 className="text-ink-muted/40 hover:text-accent dark:hover:text-dark-accent text-xs font-mono tracking-wider hover:underline underline-offset-4"
               >
-                ✕ clear
+                clear
               </button>
             </div>
           )}
 
-          {/* Posts */}
           {filteredPosts.length > 0 ? (
             <div className="space-y-1">
               {filteredPosts.map((post, index) => (
@@ -142,6 +150,7 @@ export default function HomePage({
                   post={post}
                   index={index}
                   onClick={() => onPostClick(post.id)}
+                  searchQuery={searchQuery}
                 />
               ))}
             </div>
@@ -158,7 +167,6 @@ export default function HomePage({
           )}
         </main>
 
-        {/* Sidebar */}
         <div className="lg:w-60 flex-shrink-0">
           <div className="lg:sticky lg:top-24">
             <Sidebar
@@ -166,6 +174,7 @@ export default function HomePage({
               activeTag={activeTag}
               onCategoryChange={onCategoryChange}
               onTagClick={onTagClick}
+              allTags={allTags}
             />
           </div>
         </div>

@@ -1,10 +1,12 @@
-import { categories, allTags } from '../data/posts-new';
+import { categories } from '../data/posts-new';
+import NewsletterSignup from './NewsletterSignup';
 
 interface SidebarProps {
   activeCategory: string;
   activeTag: string | null;
   onCategoryChange: (category: string) => void;
   onTagClick: (tag: string) => void;
+  allTags: string[];
 }
 
 const catDecorations: Record<string, string> = {
@@ -15,7 +17,7 @@ const catDecorations: Record<string, string> = {
   note: '·',
 };
 
-export default function Sidebar({ activeCategory, activeTag, onCategoryChange, onTagClick }: SidebarProps) {
+export default function Sidebar({ activeCategory, activeTag, onCategoryChange, onTagClick, allTags }: SidebarProps) {
   return (
     <aside className="space-y-10">
       {/* About */}
@@ -29,6 +31,8 @@ export default function Sidebar({ activeCategory, activeTag, onCategoryChange, o
           Maybe some of it will help you think too.
         </p>
       </div>
+
+      <NewsletterSignup />
 
       {/* Categories */}
       <div>
